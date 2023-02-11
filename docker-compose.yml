@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  biglybt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: biglybt
+    container_name: biglybt_docker
+    read_only: true
+    restart: "no"
+    healthcheck:
+        test: [ "CMD-SHELL", "pgrep java | wc -l"]
+        interval: "10s"
+        timeout: "3s"
+        start_period: "30s"
+        retries: 1
+    security_opt:
+      - label=disable
+      - no-new-privileges
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.addr_gen_mode=2
+      - net.ipv6.conf.default.addr_gen_mode=2
+      - net.ipv6.conf.lo.addr_gen_mode=0
+    ports:
+      # Listen Port
+      - "49000:49000"
+      # Web Interface
+      - "127.0.0.1:59091:9091"
+    tty: true
+    stdin_open: true
+    volumes:
+      - type: tmpfs
+        target: /tmp
+        tmpfs:
+          size: 100m
+      - type: tmpfs
+        target: /run
+        tmpfs:
+          size: 100m
+      - biglybt:/home/biglybt
+      - type: bind
+        target: /home/biglybt/BiglyBT Downloads
+        source: biglybt-downloads
+
+volumes:
+  biglybt:
+    
+networks:
+  default:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: 127.0.0.1
+      com.docker.network.bridge.enable_icc: "false"
